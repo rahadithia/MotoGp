@@ -1,0 +1,238 @@
+import 'package:flutter/material.dart';
+import 'package:motogp_apk/hal_circuit_data.dart';
+import 'package:motogp_apk/hal_circuit_data_service.dart';
+import 'package:http/http.dart' as http;
+
+void main() {
+  runApp(new MaterialApp(
+    title: "Circuit MotoGP",
+    home: new Circuit(),
+  ));
+}
+
+class Circuit extends StatefulWidget {
+  @override
+  _CircuitState createState() => _CircuitState();
+}
+
+class _CircuitState extends State<Circuit> {
+
+  CircuitApiService apiService;
+
+  @override
+  void initState() {
+    super.initState();
+    //API Service
+    apiService = CircuitApiService();
+  }
+
+
+  @override
+  Widget build(BuildContext context) {
+    return new Scaffold(
+      appBar: new AppBar(
+        centerTitle: true,
+        backgroundColor: Colors.black,
+        title: new Text(
+          "Circuit MotoGP",
+          style: new TextStyle(
+            color: Colors.white,
+          ),
+        ),
+      ),
+      body: new Container(
+        child: new Column(
+          children: <Widget>[
+            new Image.asset("img/clogo.png"),
+            new Expanded(
+              child: new Container(
+                child: FutureBuilder<Circuits>(
+                  future: CircuitApiService.getCircuits(),
+                  builder: (BuildContext context, AsyncSnapshot snapshot){
+                    Circuits circuitgp = snapshot.data;
+                    bool connect = snapshot.connectionState == ConnectionState.done;
+                    if (snapshot.hasData && connect) {
+                      return ListView.builder(
+                        itemCount: circuitgp.data.length,
+                        itemBuilder: (BuildContext context, int index){
+                          return new Container(
+                            padding: new EdgeInsets.all(10.0),
+                            child: new Card(
+                              child: new Row(
+                                children: <Widget>[
+                                  new Hero(
+                                    tag: circuitgp.data[index].namaCircuit,
+                                    child: new Material(
+                                      child: new InkWell(
+                                        onTap: () => Navigator.of(context).push(new MaterialPageRoute
+                                        (builder: (BuildContext context) =>
+                                        new DetailCircuit(
+                                          namacir: circuitgp.data[index].namaCircuit,
+                                          gambarcir: circuitgp.data[index].gambar,
+                                          negara: circuitgp.data[index].negara,
+                                          teks: circuitgp.data[index].teks,
+                                        ),
+                                        )),
+                                        child: new Image.network("circuitgp.data[index].gambar",
+                                        fit: BoxFit.cover, width: 100.0, height: 100.0
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  new Padding(
+                                    padding: new EdgeInsets.all(10.0),
+                                  ),
+                                  new Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: <Widget>[
+                                      new Text(
+                                        circuitgp.data[index].namaCircuit,
+                                        style: new TextStyle(
+                                          fontSize: 8.0,
+                                          fontFamily: "Serif",
+                                          color: Colors.redAccent,
+                                        ),
+                                      ),
+                                      new Text(
+                                        "Negara : "+circuitgp.data[index].negara,
+                                        style: new TextStyle(
+                                          fontSize: 8.0,
+                                          fontFamily: "Serif",
+                                          color: Colors.redAccent,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      );
+                    }else{
+                      return new Container(
+                        height: 50.0,
+                        width: 50.0,
+                        child: new Center(
+                          child: CircularProgressIndicator(),
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      
+    );
+  }
+}
+
+class DetailCircuit extends StatelessWidget {
+  DetailCircuit({this.namacir, this.gambarcir, this.negara, this.teks});
+  final String namacir;
+  final String gambarcir;
+  final String negara;
+  final String teks;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: new ListView(
+        children: <Widget>[
+          new Container(
+            height: 250.0,
+            child: new Hero(
+              tag: namacir,
+              child: new Material(
+                child: new InkWell(
+                  child: new Image.network("circuitgp.data[index].gambarcir", fit: BoxFit.cover),
+                ),
+              ),
+            ),
+          ),
+
+          new NamaCircuit(
+            namacir: namacir,
+            negara: negara,
+          ),
+          new InfoCircuit(
+            teks: teks,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+//untuk isi nama circuit dan negara
+class NamaCircuit extends StatelessWidget {
+  NamaCircuit({this.namacir, this.negara});
+  final String namacir;
+  final String negara;
+
+  @override
+  Widget build(BuildContext context) {
+    return new Container(
+      padding: new EdgeInsets.all(18.0),
+      child: new Row(
+        children: <Widget>[
+          new Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              new Text(
+                namacir,
+                style: new TextStyle(
+                  fontSize: 12.0,
+                  color: Colors.red,
+                  fontFamily: "Serif"
+                ),
+              ),
+              new Text(
+                "Negara : $negara",
+                style: new TextStyle(
+                  fontSize: 12.0,
+                  color: Colors.grey,
+                  fontFamily: "Serif"
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+//isi info Circuit
+class InfoCircuit extends StatelessWidget {
+  InfoCircuit({this.teks});
+  final String teks;
+  @override
+  Widget build(BuildContext context) {
+    return new Container(
+      padding: new EdgeInsets.all(10.0),
+      child: new Card(
+        child: new Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: new Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              new Text(
+                teks,
+                style: new TextStyle(
+                  fontSize: 18.0,
+                  color: Colors.black,
+                  fontFamily: "Serif",
+                ),
+                textAlign: TextAlign.justify,
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

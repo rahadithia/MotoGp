@@ -1,0 +1,291 @@
+import 'package:flutter/material.dart';
+import 'package:motogp_apk/hal_rider_data.dart';
+import 'package:motogp_apk/hal_rider_data_api_service.dart';
+import 'package:http/http.dart' as http;
+
+
+//Untuk API
+
+void main() {
+  runApp(new MaterialApp(
+    title: "Rider MotoGP",
+    home: new Rider(),
+  ));
+}
+
+class Rider extends StatefulWidget {
+  @override
+  _RiderState createState() => _RiderState();
+}
+
+class _RiderState extends State<Rider> {
+
+  //API Service
+  RiderApiService apiService;
+
+
+  @override
+  void initState() {
+    super.initState();
+    //API Service
+    apiService = RiderApiService();
+  }
+
+
+  @override
+  Widget build(BuildContext context) {
+    return new Scaffold(
+      appBar: new AppBar(
+        centerTitle: true,
+        backgroundColor: Colors.black,
+        title: new Text(
+          "Riders MotoGP",
+          style: new TextStyle(
+            color: Colors.white,
+          ),
+        ),
+      ),
+      body: new Container(
+        child: new Column(
+          children: <Widget>[
+            new Image.asset("img/rlogo.png"),
+            new Expanded(
+              child: new Container(
+                child: FutureBuilder<Riders>(
+                  future: RiderApiService.getRiders(),
+                  builder: (BuildContext context, AsyncSnapshot snapshot){
+                    Riders ridergp = snapshot.data;
+                    bool connect = snapshot.connectionState == ConnectionState.done;
+                    if (snapshot.hasData && connect) {
+                      return ListView.builder(
+                        itemCount: ridergp.data.length,
+                        itemBuilder: (BuildContext context, int index){
+                          return new Container(
+                            padding: new EdgeInsets.all(10.0),
+                            child: new Card(
+                              child: new Row(
+                                children: <Widget>[
+                                  new Hero(
+                                    tag: ridergp.data[index].nama,
+                                    child: new Material(
+                                      child: new InkWell(
+                                        onTap: () => Navigator.of(context).push(new MaterialPageRoute
+                                        (builder: (BuildContext context) => 
+                                        new DetailRider(
+                                          nama: ridergp.data[index].nama,
+                                          gambar: ridergp.data[index].gambar,
+                                          nomor: ridergp.data[index].nomor,
+                                          motor: ridergp.data[index].motor,
+                                          tempatLahir: ridergp.data[index].tempatLahir,
+                                          tanggalLahir: ridergp.data[index].tanggalLahir,
+                                          berat: ridergp.data[index].berat,
+                                          tinggi: ridergp.data[index].tinggi,
+                                        ),
+                                        )),
+                                        child: new Image.network("ridergp.data[index].gambar",
+                                        fit: BoxFit.cover, width: 100.0, height: 100.0),
+                                      ),
+                                    ),
+                                  ),
+                                  new Padding(
+                                    padding: new EdgeInsets.all(10.0),
+                                  ),
+                                  new Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: <Widget>[
+                                      new Text(
+                                        ridergp.data[index].nama,
+                                        style: new TextStyle(
+                                          fontSize: 18.0,
+                                          fontFamily: "Serif",
+                                          color: Colors.redAccent,
+                                        ),
+                                      ),
+                                      new Text(
+                                        "Nomor Rider : "+ridergp.data[index].nomor.toString(),
+                                        style: TextStyle(
+                                          fontSize: 18.0,
+                                          fontFamily: "Serif",
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },  
+                      );
+                    }else{
+                      return Container(
+                        height: 50.0,
+                        width: 50.0,
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    }
+                  },
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+//Halaman detail rider
+class DetailRider extends StatelessWidget {
+  DetailRider({this.nama, this.gambar, this.nomor, this.motor, this.tempatLahir, this.tanggalLahir, this.berat, this.tinggi});
+  final String nama;
+  final String gambar;
+  final int nomor;
+  final String motor;
+  final String tempatLahir;
+  final DateTime tanggalLahir;
+  final int berat;
+  final int tinggi;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: new ListView(
+        children: <Widget>[
+          new Container(
+            height: 350.0,
+            child: new Hero(
+              tag: nama,
+              child: new Material(
+                child: new InkWell(
+                  child: new Image.network("ridergp.data[index].gambar", fit: BoxFit.cover),
+                ),
+              ),
+            ),
+          ),
+
+          new NamaRider(
+            nama: nama,
+            nomor: nomor,
+            ),
+          new InfoRider(
+            motor: motor,
+            tempatLahir: tempatLahir,
+            tanggalLahir: tanggalLahir,
+            berat: berat,
+            tinggi: tinggi,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+//untuk isi nama dan nomor rider
+class NamaRider extends StatelessWidget {
+  NamaRider({this.nama, this.nomor});
+  final String nama;
+  final int nomor;
+
+  @override
+  Widget build(BuildContext context) {
+    return new Container(
+      padding: new EdgeInsets.all(18.0),
+      child: new Row(
+        children: <Widget>[
+          new Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              new Text(
+                nama,
+                style: new TextStyle(
+                  fontSize: 20.0,
+                  color: Colors.red,
+                  fontFamily: "Serif"
+                ),
+              ),
+              new Text(
+                "Nomor Rider : $nomor",
+                style: new TextStyle(
+                  fontSize: 18.0,
+                  color: Colors.grey,
+                  fontFamily: "Serif"
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+//isi info rider
+class InfoRider extends StatelessWidget {
+  InfoRider({this.motor, this.tempatLahir, this.tanggalLahir, this.berat, this.tinggi});
+  final String motor;
+  final String tempatLahir;
+  final DateTime tanggalLahir;
+  final int berat;
+  final int tinggi;
+  @override
+  Widget build(BuildContext context) {
+    return new Container(
+      padding: new EdgeInsets.all(10.0),
+      child: new Card(
+        child: new Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: new Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              new Text(
+                "Motor : "+motor,
+                style: new TextStyle(
+                  fontSize: 18.0,
+                  color: Colors.black,
+                  fontFamily: "Serif"
+                ),
+              ),
+              new Text(" "),
+              new Text(
+                "Tempat Lahir : "+tempatLahir,
+                style: new TextStyle(
+                  fontSize: 18.0,
+                  color: Colors.black,
+                  fontFamily: "Serif"
+                ),  
+              ),
+              new Text(" "),
+              new Text(
+                "Tanggal Lahir : "+tanggalLahir.toString(),
+                style: new TextStyle(
+                  fontSize: 18.0,
+                  color: Colors.black,
+                  fontFamily: "Serif"
+                ),
+              ),
+              new Text(" "),
+              new Text(
+                "Berat Badan : "+berat.toString()+" Kg.",
+                style: new TextStyle(
+                  fontSize: 18.0,
+                  color: Colors.black,
+                  fontFamily: "Serif"
+                ),
+              ),
+              new Text(" "),
+              new Text(
+                "Tinggi Badan : "+tinggi.toString()+" cm.",
+              style: new TextStyle(
+                  fontSize: 18.0,
+                  color: Colors.black,
+                  fontFamily: "Serif"
+                ),
+              )
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

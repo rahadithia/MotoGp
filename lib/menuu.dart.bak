@@ -1,0 +1,466 @@
+import 'package:flutter/material.dart';
+import './hal_informasi.dart' as info;
+import './hal_rider.dart' as rider;
+import './hal_jadwal.dart' as jadwal;
+import './hal_score.dart' as score;
+import './hal_circuit.dart' as circt;
+import 'package:motogp_apk/menu_data.dart';
+import 'package:motogp_apk/menu_data_service.dart';
+import 'dart:developer';
+
+
+class BottomNavPage extends StatefulWidget{
+  @override
+  _BottomNavPageState createState() => _BottomNavPageState();
+}
+
+class _BottomNavPageState extends State<BottomNavPage> with SingleTickerProviderStateMixin {
+
+  HomeberitaApiService apiService;
+
+
+  TabController controller;
+  @override
+  void initState() {
+    // _buatlist();
+    super.initState();
+    //API Service
+    apiService = HomeberitaApiService();
+  }
+
+  @override
+  void dispose(){
+    controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context){
+
+    return Scaffold(
+      body: CustomScrollView(
+        slivers: <Widget>[
+          new SliverAppBar(
+            backgroundColor: Colors.black,
+            expandedHeight: 50.0,
+            floating: false,
+            pinned: false,
+            centerTitle: true,
+            title: new Container(
+              margin: new EdgeInsets.symmetric(horizontal: 10.0, vertical: 8.0),
+              decoration: new BoxDecoration(
+                color: new Color.fromARGB(50, 255, 255, 255),
+                borderRadius: new BorderRadius.all(Radius.circular(22.0)),
+              ),
+              child: new Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  new Expanded(
+                    flex: 1,
+                    child: new Container(
+                      padding: new EdgeInsets.symmetric(horizontal: 10.0),
+                      child: new TextFormField(
+                        decoration: new InputDecoration(
+                          border: InputBorder.none,
+                          hintText: "Search",
+                          hintStyle: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ),
+                  new Expanded(
+                    flex: 0,
+                    child: new Container(
+                      padding: new EdgeInsets.symmetric(horizontal: 5.0),
+                      child: new Row(
+                        children: <Widget>[
+                          new IconButton(
+                            onPressed: (){},
+                            icon: Icon(Icons.search, color: Colors.white),
+                          )
+                        ],
+                      ),
+                    ),
+                  )
+                ],
+              ),
+            ),
+          ),
+          SliverList(
+            delegate: SliverChildListDelegate([
+              new GridView.count(
+                shrinkWrap: true,
+                crossAxisCount: 4,
+                crossAxisSpacing: 10.0,
+                mainAxisSpacing: 10.0,
+                children: <Widget>[
+                  new IconButton(
+                    icon: MenuIcon(
+                      icon: Icons.info,
+                      iconColor: Colors.blue,
+                      label: 'Information',
+                    ),
+                    onPressed: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context){
+                        return info.Info();
+                      }));
+                    },
+                  ),
+                  new IconButton(
+                    icon: MenuIcon(
+                      icon: Icons.person_pin,
+                      iconColor: Colors.blue,
+                      label: 'Rider',
+                    ),
+                    onPressed: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context){
+                        return rider.Rider();
+                      }));
+                    },
+                  ),
+                  new IconButton(
+                    icon: MenuIcon(
+                      icon: Icons.directions_bike,
+                      iconColor: Colors.blue,
+                      label: 'Circuit',
+                    ),
+                    onPressed: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context){
+                        return circt.Circuit();
+                      }));
+                    },
+                  ),
+                  new IconButton(
+                    icon: MenuIcon(
+                      icon: Icons.view_headline,
+                      iconColor: Colors.blue,
+                      label: 'See All',
+                    ),
+                    onPressed: (){
+                      _settingModalBottomSheet(context);
+                    },
+                  ),
+                ],
+              ),
+            ]),
+          ),
+
+          new Container(
+            child: new SliverFillRemaining(
+              child: new Column(
+                //crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  new Padding(padding: new EdgeInsets.all(10.0),),
+                  new Text(
+                    "NEWS :",
+                    style: new TextStyle(
+                      fontSize: 20.0,
+                      fontFamily: "Serif",
+                      color: Colors.black,
+                    ),
+                  ),
+                  new Expanded(
+                    child: new Container(
+                      padding: new EdgeInsets.all(5.0),
+                      child: FutureBuilder<Homeberita>(
+                        future: HomeberitaApiService.getHomeberita(),
+                        builder: (BuildContext context, AsyncSnapshot snapshot){
+                          Homeberita beritagp = snapshot.data;
+                          bool connect = snapshot.connectionState == ConnectionState.done;
+                          if (snapshot.hasData && connect) {
+                            return new GridView.builder(
+                              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2
+                              ),
+                              itemCount: beritagp.data.length,
+                              itemBuilder: (BuildContext context, int index){
+                                return new Container(
+                                  padding: new EdgeInsets.all(5.0),
+                                  child: new Card(
+                                    child: new Column(
+                                      children: <Widget>[
+                                        new Hero(
+                                          tag: beritagp.data[index].judul,
+                                          child: new Material(
+                                            child: new InkWell(
+                                              onTap: ()=> Navigator.of(context).push(new MaterialPageRoute(
+                                                builder: (BuildContext context) =>
+                                                new Detail(
+                                                  berita: beritagp.data[index].judul,
+                                                  gambar: beritagp.data[index].gambar,
+                                                  tanggal: beritagp.data[index].tanggal,
+                                                  teks: beritagp.data[index].teks,
+                                                ),
+                                                ),
+                                              ),
+                                              child: new Image.network(
+                                                "beritagp.data[index].gambar",
+                                                fit: BoxFit.cover,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        new Padding(
+                                          padding: new EdgeInsets.all(10.0),
+                                        ),
+                                        new Text(
+                                          beritagp.data[index].judul,
+                                          style: new TextStyle(
+                                            fontSize: 18.0
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            );
+                          }else{
+                            return new Container(
+                              height: 50.0,
+                              width: 50.0,
+                              child: new Center(
+                                child: CircularProgressIndicator(),
+                              ),
+                            );
+                          }
+                        },
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+//Untuk melihat semua menu icon
+void _settingModalBottomSheet(context){
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    builder: (BuildContext bc){
+      return new Container(
+        height: 200.0,
+        child: new ListView(
+          children: <Widget>[
+            new GridView.count(
+              shrinkWrap: true,
+              crossAxisCount: 4,
+              crossAxisSpacing: 10.0,
+              mainAxisSpacing: 10.0,
+              children: <Widget>[
+                new IconButton(
+                  icon: MenuIcon(
+                      icon: Icons.info,
+                      iconColor: Colors.blue,
+                      label: 'Information',
+                    ),
+                    onPressed: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context){
+                        return info.Info();
+                      }));
+                    },
+                  ),
+                  new IconButton(
+                    icon: MenuIcon(
+                      icon: Icons.person_pin,
+                      iconColor: Colors.blue,
+                      label: 'Rider',
+                    ),
+                    onPressed: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context){
+                        return rider.Rider();
+                      }));
+                    },
+                  ),
+                  new IconButton(
+                    icon: MenuIcon(
+                      icon: Icons.directions_bike,
+                      iconColor: Colors.blue,
+                      label: 'Circuit',
+                    ),
+                    onPressed: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context){
+                        return circt.Circuit();
+                      }));
+                    },
+                  ),
+                  new IconButton(
+                    icon: MenuIcon(
+                      icon: Icons.schedule,
+                      iconColor: Colors.blue,
+                      label: 'Schedule',
+                    ),
+                    onPressed: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context){
+                        return jadwal.JadwalNav();
+                      }));
+                    },
+                  ),
+                  new IconButton(
+                    icon: MenuIcon(
+                      icon: Icons.flag,
+                      iconColor: Colors.blue,
+                      label: 'Ranking',
+                    ),
+                    onPressed: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context){
+                        return score.Infoscore();
+                      }));
+                    },
+                  ),
+              ],
+            ),
+          ],
+        ),
+      );
+    }
+  );
+}
+
+// Class Untuk Menu Icon
+class MenuIcon extends StatelessWidget {
+
+  final IconData icon;
+  final Color iconColor;
+  final String label;
+
+  MenuIcon({
+    this.icon,
+    this.iconColor,
+    this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return new Container(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          new Container(
+            decoration: BoxDecoration(
+              color: iconColor.withOpacity(.2),
+              borderRadius: BorderRadius.circular(10.0),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: Icon(
+                icon,
+                color: iconColor
+              ),
+            ),
+          ),
+          new SizedBox(height: 5.0),
+          new Text(label),
+        ],
+      ),
+    );
+  }
+}
+
+//Halaman detail berita
+class Detail extends StatelessWidget {
+  Detail({this.berita, this.gambar, this.tanggal, this.teks});
+  final String berita;
+  final String gambar;
+  final DateTime tanggal;
+  final String teks;
+
+  @override
+  Widget build(BuildContext context) {
+    return new Scaffold(
+      body: new ListView(
+        children: <Widget>[
+          new Container(
+            height: 240.0,
+            child: new Hero(
+              tag: berita,
+              child: new Material(
+                child: new InkWell(
+                  child: new Image.network(
+                    "beritagp.data[index].gambar", 
+                    fit: BoxFit.cover
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          new Bagianjudul(
+            berita: berita,
+          ),
+          new Bagianberita(
+            teks: teks,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+//Bagian judul ketika detail berita
+class Bagianjudul extends StatelessWidget {
+  Bagianjudul({this.berita, this.taggal});
+  final String berita;
+  final DateTime taggal;
+
+  @override
+  Widget build(BuildContext context) {
+    return new Container(
+      padding: EdgeInsets.all(25.0),
+      child: new Row(
+        children: <Widget>[
+          new Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              new Text(
+                taggal.toString(),
+                style: new TextStyle(
+                  fontSize: 15.0, 
+                  color: Colors.grey
+                ),
+              ),
+              new Text(
+                berita,
+                style: new TextStyle(
+                  fontSize: 20.0, 
+                  color: Colors.red
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+//Bagian berita ketika detail berita
+class Bagianberita extends StatelessWidget {
+  Bagianberita({this.teks});
+  final String teks;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: new EdgeInsets.all(10.0),
+      child: new Card(
+        child: Padding(
+          padding: const EdgeInsets.all(10.0),
+          child: new Text(
+            teks, 
+            style: new TextStyle(
+              fontSize: 18.0
+            ),
+            textAlign: TextAlign.justify,
+          ),
+        ),
+      ),
+    );
+  }
+}

@@ -1,0 +1,238 @@
+import 'package:flutter/material.dart';
+import 'package:motogp_apk/hal_jadwal_sudah_data.dart';
+import 'package:motogp_apk/hal_jadwal_sudah_data_service.dart';
+import 'package:http/http.dart' as http;
+
+void main() {
+  runApp(new MaterialApp(
+    title: "Circuit MotoGP",
+    home: new Jadwalsudah(),
+  ));
+}
+
+class Jadwalsudah extends StatefulWidget {
+  @override
+  _JadwalsudahState createState() => _JadwalsudahState();
+}
+
+class _JadwalsudahState extends State<Jadwalsudah> {
+
+  JadwalApiService apiService;
+
+  @override
+  void initState() {
+    super.initState();
+    //API Service
+    apiService = JadwalApiService();
+  }
+
+
+  @override
+  Widget build(BuildContext context) {
+    return new Scaffold(
+      body: new Container(
+        child: FutureBuilder<Jadwal>(
+          future: JadwalApiService.getJadwal(),
+          builder: (BuildContext context, AsyncSnapshot snapshot){
+            Jadwal jadwalgp = snapshot.data;
+            bool connect = snapshot.connectionState == ConnectionState.done;
+            if (snapshot.hasData && connect) {
+              return GridView.builder(
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 1),
+                itemCount: jadwalgp.data.length,
+                itemBuilder: (BuildContext context, int index){
+                  return new Container(
+                    padding: new EdgeInsets.all(10.0),
+                    child: new Card(
+                      child: new Column(
+                        children: <Widget>[
+                          new Hero(
+                            tag: jadwalgp.data[index].namaCircuit,
+                            child: new Material(
+                              child: new InkWell(
+                                onTap: ()=> Navigator.of(context).push(new MaterialPageRoute(
+                                  builder: (BuildContext context) =>
+                                  new DetailCircuit(
+                                    namacir: jadwalgp.data[index].namaCircuit,
+                                    gambar: jadwalgp.data[index].gambar,
+                                    negara: jadwalgp.data[index].negara,
+                                    tanggal: jadwalgp.data[index].tanggal,
+                                    motogp: jadwalgp.data[index].motogp,
+                                  ),
+                                )),
+                                child: new Image.network(
+                                  "jadwalgp.data[index].gambar",
+                                  fit: BoxFit.cover
+                                ),
+                              ),
+                            ),
+                          ),
+                          new Padding(
+                            padding: new EdgeInsets.all(10.0),
+                          ),
+                          new Column(
+                            children: <Widget>[
+                              new Text(
+                                jadwalgp.data[index].namaCircuit,
+                                style: new TextStyle(
+                                  fontSize: 18.0,
+                                  fontFamily: "Serif",
+                                  color: Colors.redAccent,
+                                ),
+                              ),
+                              new Text(
+                                jadwalgp.data[index].negara,
+                                style: new TextStyle(
+                                  fontSize: 18.0,
+                                  fontFamily: "Serif",
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              );
+            }else{
+              return new Container(
+                height: 50.0,
+                width: 50.0,
+                child: new Center(
+                  child: CircularProgressIndicator(),
+                ),
+              );
+            }
+          },
+        ),
+      ), 
+    );
+  }
+}
+
+class DetailCircuit extends StatelessWidget {
+  DetailCircuit({this.namacir, this.gambar, this.negara, this.tanggal, this.motogp});
+  final String namacir;
+  final String gambar;
+  final String negara;
+  final String motogp;
+  final DateTime tanggal;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: new ListView(
+        children: <Widget>[
+          new Container(
+            height: 250.0,
+            child: new Hero(
+              tag: namacir,
+              child: new Material(
+                child: new InkWell(
+                  child: new Image.network(
+                    "jadwalgp.data[index].gambar",
+                    fit: BoxFit.cover
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          new NamaCircuit(
+            namacir: namacir,
+            negara: negara
+          ),
+          new InfoCircuit(
+            tanggal: tanggal,
+            motogp: motogp,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+//untuk isi nama circuit dan negara
+class NamaCircuit extends StatelessWidget {
+  NamaCircuit({this.namacir, this.negara});
+  final String namacir;
+  final String negara;
+
+  @override
+  Widget build(BuildContext context) {
+    return new Container(
+      padding: new EdgeInsets.all(18.0),
+      child: new Row(
+        children: <Widget>[
+          new Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              new Text(
+                namacir,
+                style: new TextStyle(
+                  fontSize: 20.0,
+                  color: Colors.red,
+                  fontFamily: "Serif"
+                ),
+              ),
+              new Text(
+                "Negara : $negara",
+                style: new TextStyle(
+                  fontSize: 18.0,
+                  color: Colors.grey,
+                  fontFamily: "Serif"
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+//isi info Circuit
+class InfoCircuit extends StatelessWidget {
+  InfoCircuit({this.tanggal, this.motogp});
+  final String motogp;
+  final DateTime tanggal;
+
+  @override
+  Widget build(BuildContext context) {
+    return new Container(
+      padding: new EdgeInsets.all(10.0),
+      child: new Card(
+        child: new Padding(
+          padding: const EdgeInsets.all(8.0),
+          //child: new Text(
+          //  infodetaill
+          //),
+          child: new Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              new Text(
+                "Tanggal : $tanggal",
+                style: new TextStyle(
+                  fontSize: 18.0,
+                  color: Colors.black,
+                  fontFamily: "Serif"
+                ),
+              ),
+              new Text(" "),
+              new Text(
+                "Jadwal MotoGP : $motogp",
+                style: new TextStyle(
+                  fontSize: 18.0,
+                  color: Colors.black,
+                  fontFamily: "Serif"
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
